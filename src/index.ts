@@ -22,6 +22,9 @@ export { SalesList, type SalesListProps } from "./components/SalesList";
 export { SaleDetailDrawer, type SaleDetailDrawerProps } from "./components/SaleDetailDrawer";
 export { RefundSaleModal, type RefundSaleModalProps } from "./components/RefundSaleModal";
 
+// ── Hooks ────────────────────────────────────────────────────────
+export { useSalesData } from "./useSalesData";
+
 // ── Types ────────────────────────────────────────────────────────
 export type {
     SaleRow,

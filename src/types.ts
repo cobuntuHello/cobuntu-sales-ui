@@ -38,6 +38,22 @@ export interface SaleRow {
     scheduledPayoutAt: string | null;
     paidOutAt: string | null;
     transaction: { id: string; status: string | null; totalAmount: number | null; currency: string | null };
+    // Populated only when refundStatus !== 'NONE'. Powers the admin
+    // event manage page's "Refunded" tab: who got refunded, when, why,
+    // for how much, and a link to the Stripe credit-note PDF. Batched
+    // server-side so a list of N sales costs 2 extra queries total
+    // (refunds + credit-note invoices), not 2N.
+    refund?: {
+        id: string;
+        createdAt: string;
+        amount: number;
+        reason: string | null;
+    } | null;
+    creditNote?: {
+        id: string;
+        stripeInvoicePdf: string | null;
+        stripeHostedUrl: string | null;
+    } | null;
 }
 
 export interface SalesSummary {

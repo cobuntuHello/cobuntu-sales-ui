@@ -48,6 +48,14 @@ export interface SaleRow {
         createdAt: string;
         amount: number;
         reason: string | null;
+        /**
+         * Populated when the refund was issued past the standard
+         * window under the event's extended-mode refund policy
+         * (feat/configurable-event-refund-policy, 2026-06-18). NULL
+         * on every standard ESCROW refund. Surfaces in the admin
+         * Refunded-tab + the credit-note PDF.
+         */
+        bypassReason?: string | null;
     } | null;
     creditNote?: {
         id: string;

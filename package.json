@@ -1,6 +1,6 @@
 {
   "name": "@cobuntu/sales-ui",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Shared sales-visibility + host-refund UI for Cobuntu. Provides the SalesSection (KPI cards + sales list + CSV export + sale-detail drawer + per-sale refund modal) used by both event management (/communities/:tag/events/:eventId) and product management (/communities/:tag/marketplace/:productId) surfaces. Consumed by `cobuntu-admin` and (via the host-facing /manage routes) `cobuntu-community-app`. See cobuntu-backend-monorepo/docs/features/host-refunds-and-sales-visibility.md for the umbrella plan.",
   "private": true,
   "main": "./src/index.ts",

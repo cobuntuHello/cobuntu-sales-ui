@@ -60,7 +60,7 @@ const salesFixture = {
             stripeFees: 0,
             stripeTaxFee: 0,
             refundStatus: "FULL",
-            payoutStatus: "BLOCKED",
+            payoutStatus: "PAID",
             currency: "EUR",
             eligibleForPayoutAt: null,
             scheduledPayoutAt: null,

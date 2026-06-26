@@ -48,7 +48,7 @@ export function SaleDetailDrawer(props: SaleDetailDrawerProps): React.ReactEleme
     if (!sale) return null;
 
     const totalFees = sale.platformFee + (sale.stripeFees ?? 0) + (sale.stripeTaxFee ?? 0);
-    const inEscrow = sale.payoutStatus === "ESCROW";
+    const canRefund = sale.payoutStatus === "ESCROW" || sale.payoutStatus === "HOLD";
 
     return (
         <Dialog.Root open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
@@ -99,11 +99,11 @@ export function SaleDetailDrawer(props: SaleDetailDrawerProps): React.ReactEleme
                         {onRefundClick && (
                             <button
                                 type="button"
-                                disabled={!inEscrow}
+                                disabled={!canRefund}
                                 onClick={() => onRefundClick(sale)}
-                                title={inEscrow ? "Refund this sale" : "Refund window has passed — contact Cobuntu support to escalate."}
+                                title={canRefund ? "Refund this sale" : "Refund window has passed — contact Cobuntu support to escalate."}
                                 data-testid="drawer-refund-button"
-                                className={`px-3 py-1.5 text-xs font-medium rounded-lg border ${inEscrow ? "border-zinc-200 text-zinc-700 hover:bg-zinc-50 cursor-pointer" : "border-zinc-100 text-zinc-300 cursor-not-allowed"}`}
+                                className={`px-3 py-1.5 text-xs font-medium rounded-lg border ${canRefund ? "border-zinc-200 text-zinc-700 hover:bg-zinc-50 cursor-pointer" : "border-zinc-100 text-zinc-300 cursor-not-allowed"}`}
                             >
                                 Refund
                             </button>

@@ -105,6 +105,16 @@ describe("RefundSaleModal — render", () => {
         expect(screen.getByTestId("refund-modal-confirm")).toBeDisabled();
     });
 
+    it("HOLD payoutStatus is refundable as a bypass (held below threshold, still in Cobuntu's balance)", () => {
+        // Reform: a HOLD sale is ELIGIBLE money the daily sweep is accumulating
+        // below the payout threshold — nothing has been paid out, so the host
+        // can still refund it. Past the window, so it refunds as a bypass.
+        renderModal(makeSale({ payoutStatus: "HOLD" }));
+        expect(screen.getByTestId("refund-modal-eligibility")).toHaveTextContent(/eligible for refund/i);
+        expect(screen.getByTestId("refund-modal-bypass-banner")).toBeInTheDocument();
+        expect(screen.getByTestId("refund-modal-bypass-reason")).toBeInTheDocument();
+    });
+
     it("locks the form when already fully refunded", () => {
         renderModal(makeSale({ refundStatus: "FULL" }));
         expect(screen.getByTestId("refund-modal-eligibility")).toHaveTextContent(/already been fully refunded/i);

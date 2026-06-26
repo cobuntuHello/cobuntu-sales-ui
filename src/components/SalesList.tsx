@@ -77,7 +77,7 @@ export function SalesList(props: SalesListProps): React.ReactElement {
                 </thead>
                 <tbody>
                     {sales.map((sale) => {
-                        const inEscrow = sale.payoutStatus === "ESCROW";
+                        const canRefund = sale.payoutStatus === "ESCROW" || sale.payoutStatus === "HOLD";
                         return (
                             <tr
                                 key={sale.id}
@@ -99,14 +99,14 @@ export function SalesList(props: SalesListProps): React.ReactElement {
                                 <td className="px-4 py-3 text-right">
                                     <button
                                         type="button"
-                                        disabled={!inEscrow || !onRefundClick}
+                                        disabled={!canRefund || !onRefundClick}
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            if (inEscrow) onRefundClick?.(sale);
+                                            if (canRefund) onRefundClick?.(sale);
                                         }}
-                                        title={inEscrow ? "Refund this sale" : "Refund window has passed — contact Cobuntu support to escalate."}
+                                        title={canRefund ? "Refund this sale" : "Refund window has passed — contact Cobuntu support to escalate."}
                                         data-testid={`refund-button-${sale.id}`}
-                                        className={`px-3 py-1.5 text-xs font-medium rounded-lg border ${inEscrow ? "border-zinc-200 text-zinc-700 hover:bg-zinc-50 cursor-pointer" : "border-zinc-100 text-zinc-300 cursor-not-allowed"}`}
+                                        className={`px-3 py-1.5 text-xs font-medium rounded-lg border ${canRefund ? "border-zinc-200 text-zinc-700 hover:bg-zinc-50 cursor-pointer" : "border-zinc-100 text-zinc-300 cursor-not-allowed"}`}
                                     >
                                         Refund
                                     </button>

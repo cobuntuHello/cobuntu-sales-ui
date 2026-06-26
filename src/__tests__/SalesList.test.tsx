@@ -58,7 +58,16 @@ describe("SalesList", () => {
         expect(onRefundClick).toHaveBeenCalledWith(expect.objectContaining({ id: "s1" }));
     });
 
-    it("Refund button is disabled when payoutStatus !== ESCROW", () => {
+    it("Refund button is enabled on HOLD sales (money still in Cobuntu's balance)", () => {
+        const onRefundClick = vi.fn();
+        render(wrap(<SalesList sales={[makeSale({ payoutStatus: "HOLD" })]} onRefundClick={onRefundClick} />));
+        const btn = screen.getByTestId("refund-button-s1");
+        expect(btn).toBeEnabled();
+        fireEvent.click(btn);
+        expect(onRefundClick).toHaveBeenCalledWith(expect.objectContaining({ id: "s1" }));
+    });
+
+    it("Refund button is disabled once paid out (payoutStatus = PAID)", () => {
         const onRefundClick = vi.fn();
         render(wrap(<SalesList sales={[makeSale({ payoutStatus: "PAID" })]} onRefundClick={onRefundClick} />));
         expect(screen.getByTestId("refund-button-s1")).toBeDisabled();

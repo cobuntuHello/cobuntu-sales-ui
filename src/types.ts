@@ -10,7 +10,10 @@
  * — Vercel builds clone this repo standalone.
  */
 
-export type SalePayoutStatus = "ESCROW" | "ELIGIBLE" | "PAID" | "BLOCKED";
+// Payout reform: HOLD replaces the retired BLOCKED state. A HOLD sale is
+// ELIGIBLE money the daily sweep is accumulating below the payout threshold —
+// it is still in Cobuntu's balance (nothing paid out), so it stays refundable.
+export type SalePayoutStatus = "ESCROW" | "ELIGIBLE" | "PAID" | "HOLD";
 export type SaleRefundStatus = "NONE" | "PARTIAL" | "FULL" | "PENDING" | "DISPUTED" | "DISPUTE_WON" | "DISPUTE_LOST";
 
 export interface SaleBuyer {

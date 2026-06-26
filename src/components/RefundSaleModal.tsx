@@ -95,14 +95,14 @@ function computeEligibility(sale: SaleRow | null): EligibilityState {
             reason: "Already paid out to your community's Stripe account. Issue the refund from your Stripe dashboard.",
         };
     }
-    if (sale.payoutStatus === "BLOCKED") {
-        return { eligible: false, isBypass: false, reason: "This sale is blocked from refunds. Contact Cobuntu support." };
-    }
-    // payoutStatus = ESCROW or ELIGIBLE. ELIGIBLE only succeeds when the
-    // event's refundPolicy.mode = 'extended' — the BE rejects it
-    // otherwise with 409 POLICY_BLOCKED. We let the buyer through here
-    // (no FE-side policy knowledge needed) so the parent can pre-open
-    // the modal for any allowed combination.
+    // payoutStatus = ESCROW, HOLD, or ELIGIBLE — all still hold the money in
+    // Cobuntu's balance (nothing paid out), so a plain refund is always safe.
+    // ESCROW is within the refund window (no bypass). HOLD + ELIGIBLE are
+    // past the window, so they refund as a bypass: ELIGIBLE only succeeds when
+    // the event's refundPolicy.mode = 'extended' (the BE otherwise returns 409
+    // POLICY_BLOCKED). We let the buyer through here (no FE-side policy
+    // knowledge needed) so the parent can pre-open the modal for any allowed
+    // combination.
     const isBypass = sale.payoutStatus !== "ESCROW";
     return { eligible: true, isBypass };
 }

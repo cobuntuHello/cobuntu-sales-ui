@@ -211,9 +211,8 @@ export function RefundSaleModal(props: RefundSaleModalProps): React.ReactElement
                         <div role="alert" data-testid="refund-modal-bypass-banner">
                             <strong>Past the standard refund window.</strong>{" "}
                             By refunding, you'll reduce your community's next payout by {grossDisplay}.
-                            Refunds aren't available after the bi-weekly payout sends funds to your
-                            community's Stripe account — at that point, issue refunds directly from
-                            your Stripe dashboard.
+                            Refunds aren't available once the payout has been sent to your account.
+                            At that point, issue refunds directly from your Stripe dashboard.
                         </div>
                     ) : null}
 

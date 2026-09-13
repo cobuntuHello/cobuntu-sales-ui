@@ -53,7 +53,7 @@ beforeEach(() => { vi.restoreAllMocks(); });
 
 describe("SaleDetailDrawer — deliverables", () => {
     it("loads and shows download telemetry + link open-count + certificate", async () => {
-        const fetchMock = vi.fn(() => Promise.resolve(new Response(JSON.stringify(DELIVERABLES), { status: 200 })));
+        const fetchMock = vi.fn((..._args: any[]) => Promise.resolve(new Response(JSON.stringify(DELIVERABLES), { status: 200 })));
         vi.stubGlobal("fetch", fetchMock);
 
         renderDrawer(makeSale());
@@ -70,7 +70,7 @@ describe("SaleDetailDrawer — deliverables", () => {
     });
 
     it("regenerates a per-buyer link (POST link-tokens)", async () => {
-        const fetchMock = vi.fn(() => Promise.resolve(new Response(JSON.stringify(DELIVERABLES), { status: 200 })));
+        const fetchMock = vi.fn((..._args: any[]) => Promise.resolve(new Response(JSON.stringify(DELIVERABLES), { status: 200 })));
         vi.stubGlobal("fetch", fetchMock);
         const user = userEvent.setup();
 
@@ -88,7 +88,7 @@ describe("SaleDetailDrawer — deliverables", () => {
     });
 
     it("revokes a per-buyer link (POST revoke)", async () => {
-        const fetchMock = vi.fn(() => Promise.resolve(new Response(JSON.stringify(DELIVERABLES), { status: 200 })));
+        const fetchMock = vi.fn((..._args: any[]) => Promise.resolve(new Response(JSON.stringify(DELIVERABLES), { status: 200 })));
         vi.stubGlobal("fetch", fetchMock);
         const user = userEvent.setup();
 
@@ -104,8 +104,28 @@ describe("SaleDetailDrawer — deliverables", () => {
         expect(post[0]).toBe("https://api.test/communities/pbn/sales/sale-123/link-tokens/l1/revoke");
     });
 
+    it("emails the buyer the link (POST resend) and confirms", async () => {
+        const fetchMock = vi.fn((..._args: any[]) => Promise.resolve(new Response(JSON.stringify(DELIVERABLES), { status: 200 })));
+        vi.stubGlobal("fetch", fetchMock);
+        const user = userEvent.setup();
+
+        renderDrawer(makeSale());
+        await waitFor(() => expect(screen.getByTestId("drawer-deliverables")).toBeInTheDocument());
+
+        await user.click(screen.getByRole("button", { name: /Email to buyer/i }));
+        await waitFor(() => {
+            const post = fetchMock.mock.calls.find(c => String(c[0]).endsWith("/resend"));
+            expect(post).toBeTruthy();
+        });
+        const post = fetchMock.mock.calls.find(c => String(c[0]).endsWith("/resend"))!;
+        expect(post[0]).toBe("https://api.test/communities/pbn/sales/sale-123/link-tokens/l1/resend");
+        expect((post[1] as RequestInit).method).toBe("POST");
+        // Confirmation state.
+        await waitFor(() => expect(screen.getByRole("button", { name: /Sent/i })).toBeInTheDocument());
+    });
+
     it("does not fetch deliverables for an event sale", async () => {
-        const fetchMock = vi.fn(() => Promise.resolve(new Response("{}", { status: 200 })));
+        const fetchMock = vi.fn((..._args: any[]) => Promise.resolve(new Response("{}", { status: 200 })));
         vi.stubGlobal("fetch", fetchMock);
 
         renderDrawer(makeSale({ eventId: "evt-1" }));

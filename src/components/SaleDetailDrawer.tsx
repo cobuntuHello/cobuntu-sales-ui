@@ -71,6 +71,7 @@ export function SaleDetailDrawer(props: SaleDetailDrawerProps): React.ReactEleme
     const [delivLoading, setDelivLoading] = useState(false);
     const [busyAttachment, setBusyAttachment] = useState<string | null>(null);
     const [copiedToken, setCopiedToken] = useState<string | null>(null);
+    const [resentAttachment, setResentAttachment] = useState<string | null>(null);
 
     const loadDeliverables = useCallback(async () => {
         if (!isProductSale || !saleId) return;
@@ -90,7 +91,7 @@ export function SaleDetailDrawer(props: SaleDetailDrawerProps): React.ReactEleme
     // Load when the drawer opens on a product sale; clear on close/change.
     useEffect(() => {
         if (open && isProductSale) loadDeliverables();
-        else { setDeliverables(null); setCopiedToken(null); }
+        else { setDeliverables(null); setCopiedToken(null); setResentAttachment(null); }
     }, [open, isProductSale, saleId, loadDeliverables]);
 
     // Absolute link a buyer can open — apiBaseUrl may be relative ("/api").
@@ -101,17 +102,22 @@ export function SaleDetailDrawer(props: SaleDetailDrawerProps): React.ReactEleme
         return `${base}/link/${token}`;
     }, [apiBaseUrl]);
 
-    const postLinkAction = useCallback(async (attachmentId: string, action: "generate" | "revoke") => {
+    const postLinkAction = useCallback(async (attachmentId: string, action: "generate" | "revoke" | "resend") => {
         if (!saleId || !communityTag) return;
         setBusyAttachment(attachmentId);
         try {
             const headers = { "Content-Type": "application/json", ...(await getAuthHeaders()) };
+            const base = `${apiBaseUrl}/communities/${communityTag}/sales/${saleId}/link-tokens`;
             const url = action === "generate"
-                ? `${apiBaseUrl}/communities/${communityTag}/sales/${saleId}/link-tokens`
-                : `${apiBaseUrl}/communities/${communityTag}/sales/${saleId}/link-tokens/${attachmentId}/revoke`;
+                ? base
+                : `${base}/${attachmentId}/${action}`; // revoke | resend
             const body = action === "generate" ? JSON.stringify({ attachmentId }) : undefined;
             const res = await fetch(url, { method: "POST", headers, body });
-            if (res.ok) await loadDeliverables();
+            if (res.ok) {
+                if (action === "resend") { setResentAttachment(attachmentId); setTimeout(() => setResentAttachment(null), 2000); }
+                // resend may have minted/reissued a token; refresh either way.
+                await loadDeliverables();
+            }
         } finally {
             setBusyAttachment(null);
         }
@@ -202,6 +208,12 @@ export function SaleDetailDrawer(props: SaleDetailDrawerProps): React.ReactEleme
                                                             <button type="button" onClick={() => copyLink(d.link!.token)}
                                                                 className="px-2 py-1 text-[11px] font-medium text-zinc-700 border border-zinc-200 rounded-md hover:bg-zinc-50 cursor-pointer">
                                                                 {copiedToken === d.link.token ? "Copied" : "Copy link"}
+                                                            </button>
+                                                        )}
+                                                        {!d.link.revoked && (
+                                                            <button type="button" disabled={busyAttachment === d.id} onClick={() => postLinkAction(d.id, "resend")}
+                                                                className="px-2 py-1 text-[11px] font-medium text-zinc-700 border border-zinc-200 rounded-md hover:bg-zinc-50 disabled:opacity-40 cursor-pointer">
+                                                                {resentAttachment === d.id ? "Sent ✓" : "Email to buyer"}
                                                             </button>
                                                         )}
                                                         <button type="button" disabled={busyAttachment === d.id} onClick={() => postLinkAction(d.id, "generate")}

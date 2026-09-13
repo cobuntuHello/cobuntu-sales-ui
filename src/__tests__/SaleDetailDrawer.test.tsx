@@ -64,9 +64,32 @@ describe("SaleDetailDrawer — deliverables", () => {
         // FILE telemetry.
         expect(screen.getByText(/3 downloads/)).toBeInTheDocument();
         expect(screen.getByText(/2 of 5 left/)).toBeInTheDocument();
-        // LINK open count + certificate.
+        // LINK open count + certificate button (header-authed → not a plain anchor).
         expect(screen.getByText(/4 opens/)).toBeInTheDocument();
-        expect(screen.getByTestId("drawer-certificate-link")).toHaveAttribute("href", "https://api.test/communities/pbn/sales/sale-123/license-certificate");
+        expect(screen.getByTestId("drawer-certificate-button")).toBeInTheDocument();
+    });
+
+    it("downloads the certificate as an auth'd blob (not a bare anchor that 401s)", async () => {
+        const blob = new Blob(["%PDF-1.4"], { type: "application/pdf" });
+        const fetchMock = vi.fn((url: string, _init?: RequestInit) =>
+            String(url).endsWith("/license-certificate")
+                ? Promise.resolve(new Response(blob, { status: 200 }))
+                : Promise.resolve(new Response(JSON.stringify(DELIVERABLES), { status: 200 })),
+        );
+        vi.stubGlobal("fetch", fetchMock);
+        (URL as any).createObjectURL = vi.fn(() => "blob:mock");
+        (URL as any).revokeObjectURL = vi.fn();
+        const user = userEvent.setup();
+
+        renderDrawer(makeSale());
+        await waitFor(() => expect(screen.getByTestId("drawer-certificate-button")).toBeInTheDocument());
+        await user.click(screen.getByTestId("drawer-certificate-button"));
+
+        await waitFor(() => {
+            const call = fetchMock.mock.calls.find(c => String(c[0]).endsWith("/license-certificate"));
+            expect(call).toBeTruthy();
+            expect((call![1] as RequestInit).headers).toMatchObject({ Authorization: "Bearer test-token" });
+        });
     });
 
     it("regenerates a per-buyer link (POST link-tokens)", async () => {

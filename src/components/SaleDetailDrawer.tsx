@@ -72,6 +72,8 @@ export function SaleDetailDrawer(props: SaleDetailDrawerProps): React.ReactEleme
     const [busyAttachment, setBusyAttachment] = useState<string | null>(null);
     const [copiedToken, setCopiedToken] = useState<string | null>(null);
     const [resentAttachment, setResentAttachment] = useState<string | null>(null);
+    const [certDownloading, setCertDownloading] = useState(false);
+    const [certError, setCertError] = useState(false);
 
     const loadDeliverables = useCallback(async () => {
         if (!isProductSale || !saleId) return;
@@ -127,11 +129,35 @@ export function SaleDetailDrawer(props: SaleDetailDrawerProps): React.ReactEleme
         try { await navigator.clipboard.writeText(linkUrlFor(token)); setCopiedToken(token); setTimeout(() => setCopiedToken(null), 1500); } catch { /* clipboard denied */ }
     }, [linkUrlFor]);
 
+    // The certificate route is header-authed (cross-origin Bearer), so a plain
+    // <a href> navigation can't attach the token and 401s. Fetch it as a blob
+    // with the auth header, then hand the browser a blob: url to save.
+    const downloadCertificate = useCallback(async () => {
+        if (!saleId || !communityTag) return;
+        setCertDownloading(true);
+        try {
+            const res = await fetch(`${apiBaseUrl}/communities/${communityTag}/sales/${saleId}/license-certificate`, { headers: await getAuthHeaders() });
+            if (!res.ok) { setCertError(true); setTimeout(() => setCertError(false), 3000); return; }
+            const blob = await res.blob();
+            const href = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = href;
+            a.download = `license-certificate-${saleId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(href);
+        } catch {
+            setCertError(true); setTimeout(() => setCertError(false), 3000);
+        } finally {
+            setCertDownloading(false);
+        }
+    }, [saleId, communityTag, apiBaseUrl, getAuthHeaders]);
+
     if (!sale) return null;
 
     const totalFees = sale.platformFee + (sale.stripeFees ?? 0) + (sale.stripeTaxFee ?? 0);
     const canRefund = sale.payoutStatus === "ESCROW" || sale.payoutStatus === "HOLD";
-    const certificateUrl = communityTag ? `${apiBaseUrl}/communities/${communityTag}/sales/${sale.id}/license-certificate` : null;
 
     return (
         <Dialog.Root open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
@@ -239,12 +265,12 @@ export function SaleDetailDrawer(props: SaleDetailDrawerProps): React.ReactEleme
                                 </div>
                             ))}
 
-                            {!delivLoading && deliverables?.hasCertificate && certificateUrl && (
-                                <a href={certificateUrl} target="_blank" rel="noopener noreferrer"
-                                    data-testid="drawer-certificate-link"
-                                    className="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1.5 text-[11px] font-medium text-zinc-700 border border-zinc-200 rounded-md hover:bg-zinc-50 cursor-pointer">
-                                    Download license certificate
-                                </a>
+                            {!delivLoading && deliverables?.hasCertificate && communityTag && (
+                                <button type="button" onClick={downloadCertificate} disabled={certDownloading}
+                                    data-testid="drawer-certificate-button"
+                                    className="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1.5 text-[11px] font-medium text-zinc-700 border border-zinc-200 rounded-md hover:bg-zinc-50 disabled:opacity-40 cursor-pointer">
+                                    {certDownloading ? "Preparing…" : certError ? "Failed — retry" : "Download license certificate"}
+                                </button>
                             )}
                         </section>
                     )}

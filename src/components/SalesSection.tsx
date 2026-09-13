@@ -136,6 +136,7 @@ export function SalesSection(props: SalesSectionProps): React.ReactElement {
 
             <SaleDetailDrawer
                 sale={drawerSale}
+                communityTag={communityTag}
                 open={drawerSale !== null}
                 onClose={() => setDrawerSale(null)}
                 onRefundClick={(s) => {
